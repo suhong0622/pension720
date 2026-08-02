@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>연금복권720+ 아카이브 · 당첨번호 조회 & 통계</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <span class="brand-mark">720<sup>+</sup></span>
+      <span class="brand-text">연금복권 아카이브</span>
+    </div>
+    <nav class="site-nav">
+      <button class="nav-link is-active" data-nav="hero">이번회차</button>
+      <button class="nav-link" data-nav="lookup">회차조회</button>
+      <button class="nav-link" data-nav="stats">통계분석</button>
+      <button class="nav-link" data-nav="generator">번호추출</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== HERO / LATEST TICKET ===================== -->
+  <section id="hero" class="section hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">매주 목요일 추첨 · 1회(2020.05.07)부터 누적</p>
+        <h1>당첨번호,<br>영수증처럼<br>뽑아봤습니다.</h1>
+        <p class="hero-desc">
+          연금복권720+ 1회부터 최신회까지 <strong id="totalRoundsText">-</strong>개 회차 전체 당첨번호를 모았습니다.
+          조 단위 당첨 확률과 자리별 숫자 습관을 통계로 확인해보세요.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" data-nav="lookup">회차별 조회하기</button>
+          <button class="btn btn-ghost" data-nav="stats">통계 보러가기</button>
+        </div>
+      </div>
+
+      <div class="hero-ticket">
+        <div class="ticket" id="latestTicket">
+          <div class="ticket-top">
+            <span class="ticket-label">PENSION LOTTERY 720+</span>
+            <span class="ticket-round">제 <strong id="latestRound">-</strong>회</span>
+          </div>
+          <div class="ticket-date" id="latestDate">-</div>
+
+          <div class="ticket-row">
+            <div class="jo-stamp" id="latestJo">-조</div>
+            <div class="digit-reel" id="latestNumber">
+              <!-- digits injected -->
+            </div>
+          </div>
+
+          <div class="ticket-perf" aria-hidden="true"></div>
+
+          <div class="ticket-row ticket-row--bonus">
+            <span class="bonus-label">보너스</span>
+            <div class="digit-reel digit-reel--sm" id="latestBonus">
+              <!-- digits injected -->
+            </div>
+          </div>
+
+          <div class="ticket-foot">
+            <span>1등 매월 700만원 × 20년</span>
+            <span class="ticket-stamp">당첨결과</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LOOKUP ===================== -->
+  <section id="lookup" class="section lookup">
+    <div class="wrap">
+      <p class="eyebrow">SEARCH</p>
+      <h2 class="section-title">회차별 당첨번호 조회</h2>
+
+      <div class="lookup-controls">
+        <form id="roundForm" class="round-form">
+          <label for="roundInput">회차 번호</label>
+          <input type="number" id="roundInput" min="1" placeholder="예: 296">
+          <button type="submit" class="btn btn-primary btn-sm">조회</button>
+        </form>
+
+        <div class="lookup-sort">
+          <label for="sortSelect">정렬</label>
+          <select id="sortSelect">
+            <option value="desc">최신회차순</option>
+            <option value="asc">1회부터</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="round-table">
+          <thead>
+            <tr>
+              <th>회차</th>
+              <th>추첨일</th>
+              <th>1등 (조+번호)</th>
+              <th>보너스</th>
+            </tr>
+          </thead>
+          <tbody id="roundTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </section>
+
+  <!-- ===================== STATS ===================== -->
+  <section id="stats" class="section stats">
+    <div class="wrap">
+      <p class="eyebrow">STATISTICS</p>
+      <h2 class="section-title">번호 통계 분석</h2>
+      <p class="section-desc">
+        조회 구간을 바꿔가며 조 출현 빈도와 자리별 숫자 분포를 살펴보세요.
+        연금복권은 매회 완전 무작위 추첨이라, 과거 빈도가 다음 회차를 보장하진 않지만 &mdash;
+        그래도 눈으로 확인하는 재미는 있으니까요.
+      </p>
+
+      <div class="range-tabs" id="rangeTabs">
+        <button class="range-tab is-active" data-range="20">최근 20회</button>
+        <button class="range-tab" data-range="50">최근 50회</button>
+        <button class="range-tab" data-range="100">최근 100회</button>
+        <button class="range-tab" data-range="all">전체 회차</button>
+      </div>
+
+      <div class="stats-grid">
+
+        <!-- 조 분포 -->
+        <div class="stat-card">
+          <h3 class="stat-card-title">조(組) 출현 빈도</h3>
+          <p class="stat-card-sub" id="joRangeLabel">최근 20회 기준</p>
+          <div class="bar-list" id="joBars"></div>
+        </div>
+
+        <!-- 자리수별 숫자 빈도 heatmap -->
+        <div class="stat-card stat-card--wide">
+          <h3 class="stat-card-title">자리별 숫자 출현 빈도</h3>
+          <p class="stat-card-sub">진한 칸일수록 해당 자리에 그 숫자가 자주 나왔어요 · 평균보다 많이 나온 칸은 <span class="legend-dot"></span>로 표시돼요</p>
+          <div class="heatmap" id="heatmap"></div>
+
+          <div class="hm-recommend">
+            <button type="button" class="btn btn-primary btn-sm" id="hmRecommendBtn">평균 이상 숫자로 5게임 추천받기</button>
+            <p class="hm-recommend-desc">각 자리에서 평균보다 많이 나온 숫자 풀 중 하나씩 무작위로 뽑아 조합해요.</p>
+            <div class="hm-recommend-tickets" id="hmRecommendTickets"></div>
+          </div>
+        </div>
+
+        <!-- Hot / Cold -->
+        <div class="stat-card">
+          <h3 class="stat-card-title">자리별 HOT 숫자</h3>
+          <p class="stat-card-sub">각 자리에서 가장 많이 나온 숫자</p>
+          <div class="hotcold" id="hotNumbers"></div>
+        </div>
+
+        <div class="stat-card">
+          <h3 class="stat-card-title">자리별 COLD 숫자</h3>
+          <p class="stat-card-sub">각 자리에서 가장 적게 나온 숫자</p>
+          <div class="hotcold" id="coldNumbers"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GENERATOR ===================== -->
+  <section id="generator" class="section generator">
+    <div class="wrap">
+      <p class="eyebrow">GENERATE</p>
+      <h2 class="section-title">조건별 번호 추출</h2>
+      <p class="section-desc">
+        원하는 조건을 정하면 그 조건에 맞는 번호를 무작위로 뽑아드려요.
+        조건을 많이 걸수록 뽑히는 데 시간이 걸리거나, 아예 나오지 않을 수도 있어요.
+      </p>
+
+      <div class="gen-layout">
+
+        <!-- ---- CONDITION FORM ---- -->
+        <form id="genForm" class="gen-form">
+
+          <div class="gen-field">
+            <span class="gen-field-label">조 선택</span>
+            <div class="chip-row" id="joChoice">
+              <button type="button" class="chip is-active" data-jo="all">전체</button>
+              <button type="button" class="chip" data-jo="1">1조</button>
+              <button type="button" class="chip" data-jo="2">2조</button>
+              <button type="button" class="chip" data-jo="3">3조</button>
+              <button type="button" class="chip" data-jo="4">4조</button>
+              <button type="button" class="chip" data-jo="5">5조</button>
+            </div>
+          </div>
+
+          <div class="gen-field">
+            <span class="gen-field-label">자리별 숫자 고정 <em>(비워두면 무작위)</em></span>
+            <div class="fixed-digits" id="fixedDigits">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="0" placeholder="·">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="1" placeholder="·">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="2" placeholder="·">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="3" placeholder="·">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="4" placeholder="·">
+              <input type="text" inputmode="numeric" maxlength="1" data-pos="5" placeholder="·">
+            </div>
+          </div>
+
+          <div class="gen-field-pair">
+            <div class="gen-field">
+              <span class="gen-field-label">반드시 포함할 숫자</span>
+              <div class="chip-row chip-row--digits" id="includeDigits" data-mode="include"></div>
+            </div>
+            <div class="gen-field">
+              <span class="gen-field-label">제외할 숫자</span>
+              <div class="chip-row chip-row--digits" id="excludeDigits" data-mode="exclude"></div>
+            </div>
+          </div>
+
+          <div class="gen-field-pair">
+            <div class="gen-field">
+              <span class="gen-field-label">홀수 개수 (6자리 중)</span>
+              <select id="oddCount">
+                <option value="any">상관없음</option>
+                <option value="0">0개 (전부 짝수)</option>
+                <option value="1">1개</option>
+                <option value="2">2개</option>
+                <option value="3">3개</option>
+                <option value="4">4개</option>
+                <option value="5">5개</option>
+                <option value="6">6개 (전부 홀수)</option>
+              </select>
+            </div>
+            <div class="gen-field">
+              <span class="gen-field-label">6자리 합계 범위 <em>(0~54)</em></span>
+              <div class="range-inputs">
+                <input type="number" id="sumMin" min="0" max="54" placeholder="최소">
+                <span>~</span>
+                <input type="number" id="sumMax" min="0" max="54" placeholder="최대">
+              </div>
+            </div>
+          </div>
+
+          <div class="gen-field gen-field--row">
+            <label class="checkbox-row">
+              <input type="checkbox" id="avoidPast">
+              <span>과거 당첨번호와 겹치지 않게 뽑기</span>
+            </label>
+          </div>
+
+          <div class="gen-field gen-field--row">
+            <span class="gen-field-label">추출 개수</span>
+            <div class="chip-row" id="countChoice">
+              <button type="button" class="chip" data-count="1">1게임</button>
+              <button type="button" class="chip is-active" data-count="5">5게임</button>
+              <button type="button" class="chip" data-count="10">10게임</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary gen-submit">조건에 맞는 번호 추출하기</button>
+          <p class="gen-error" id="genError"></p>
+        </form>
+
+        <!-- ---- RESULT ---- -->
+        <div class="gen-result">
+          <div class="gen-result-tickets" id="genTickets">
+            <div class="gen-empty">조건을 정하고 추출 버튼을 눌러보세요.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p>본 데이터는 나무위키 공개 문서를 기반으로 정리한 참고용 자료이며, 정확한 당첨번호는 동행복권 공식 홈페이지(dhlottery.co.kr)에서 확인하세요.</p>
+    <p class="footer-sub">연금복권720+ 아카이브 · 매주 목요일 추첨</p>
+  </div>
+</footer>
+
+<script src="data/win720.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
