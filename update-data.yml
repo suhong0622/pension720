@@ -2,10 +2,8 @@ name: Update pension720 data
 
 on:
   schedule:
-    # 매주 목요일 UTC 11:05 = 한국시간(KST) 20:05
-    # 연금복권720+ 추첨은 매주 목요일 19:05(KST)라, 결과 반영 시간을 넉넉히 잡았어요.
     - cron: "5 11 * * 4"
-  workflow_dispatch: {}  # Actions 탭에서 수동으로도 실행 가능
+  workflow_dispatch: {}
 
 permissions:
   contents: write
