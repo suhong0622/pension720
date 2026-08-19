@@ -21,7 +21,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install playwright
+
+      - name: Install Chromium (Playwright)
+        run: playwright install --with-deps chromium
 
       - name: Run update script
         run: python scripts/update_data.py
@@ -32,3 +35,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/win720.js
           if git diff --staged --quiet; then
+            echo "변경 사항 없음"
+          else
+            git commit -m "chore: 연금복권720+ 최신 회차 자동 반영"
+            git push
+          fi
