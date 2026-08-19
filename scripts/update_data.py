@@ -1,10 +1,23 @@
 """
-연금복권720+ 최신 당첨번호를 로또성지(lottosungji.com)에서 가져와
-data/win720.js 에 없는 새 회차만 추가하는 스크립트.
+연금복권720+ 최신 당첨번호를 자동으로 가져와 data/win720.js 를 갱신하는 스크립트.
 
-GitHub Actions에서 매주 자동으로 실행됩니다 (.github/workflows/update-data.yml).
-로컬에서 수동으로 테스트하려면:
-    pip install requests beautifulsoup4
+[이전 버전과의 차이]
+기존 버전은 파이썬 requests 라이브러리로 단순 HTTP 요청만 보냈다. 이 경우
+대상 사이트가 표를 자바스크립트로 나중에 그리는 방식이면 빈 껍데기 HTML만
+받아오게 되어, 실제로 GitHub Actions에서 "회차를 하나도 못 찾음" 오류가
+발생했다 (사람이 브라우저로 볼 때와 프로그램이 요청만 보낼 때 받는 내용이
+다를 수 있음).
+
+이번 버전은 Playwright로 실제 Chromium 브라우저를 띄워 페이지를 열고,
+자바스크립트 실행이 끝난 뒤의 최종 화면 텍스트를 읽어온다. 사람이 눈으로
+보는 것과 동일한 내용을 받기 때문에, JS 렌더링 때문에 실패하던 문제는
+해결된다.
+
+GitHub Actions에서 매주 목요일 밤 자동 실행됨 (.github/workflows/update-data.yml).
+
+로컬 테스트:
+    pip install playwright
+    playwright install --with-deps chromium
     python scripts/update_data.py
 """
 
@@ -13,33 +26,38 @@ import re
 import sys
 from pathlib import Path
 
-import requests
-from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 SOURCE_URL = "https://www.lottosungji.com/pension"
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "win720.js"
 
-# "326회 ... 2026년 7월 30일 ... 2조 502733 ... 399616" 같은 패턴을
-# 페이지의 순수 텍스트에서 찾아낸다 (마크업에 의존하지 않아 구조가 조금
-# 바뀌어도 잘 버틴다).
+# "326회 2026년 7월 30일 2조 502733 399616" 같은 패턴을 찾는다.
+# (실제 페이지 텍스트로 여러 차례 검증된 패턴)
 ROUND_PATTERN = re.compile(
     r"(\d{1,4})회\D{0,20}?(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일"
     r"\D{0,10}?([1-5])조\s*(\d{6})\D{0,10}?(\d{6})"
 )
 
 
-def fetch_rounds() -> dict:
-    resp = requests.get(
-        SOURCE_URL,
-        timeout=20,
-        headers={"User-Agent": "Mozilla/5.0 (compatible; pension720-archive-bot/1.0)"},
-    )
-    resp.raise_for_status()
+def fetch_page_text(url: str) -> str:
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            )
+        )
+        try:
+            page.goto(url, timeout=30000, wait_until="networkidle")
+            page.wait_for_timeout(1500)  # 늦게 그려지는 표까지 대기
+            text = page.inner_text("body")
+        finally:
+            browser.close()
+    return re.sub(r"\s+", " ", text)
 
-    soup = BeautifulSoup(resp.text, "html.parser")
-    text = soup.get_text(separator=" ")
-    text = re.sub(r"\s+", " ", text)
 
+def parse_rounds(text: str) -> dict:
     rounds = {}
     for m in ROUND_PATTERN.finditer(text):
         rnd_s, y, mo, d, group, number, bonus = m.groups()
@@ -81,10 +99,19 @@ def main() -> int:
     by_round = {r["round"]: r for r in existing}
     before = max(by_round) if by_round else 0
 
-    scraped = fetch_rounds()
+    text = fetch_page_text(SOURCE_URL)
+    print(f"페이지 텍스트 길이: {len(text)}자")
+    print("--- 텍스트 앞부분 (디버그용) ---")
+    print(text[:800])
+    print("--- 여기까지 ---")
+
+    scraped = parse_rounds(text)
+    print(f"인식된 회차 수: {len(scraped)}")
+
     if not scraped:
-        print("경고: 새 회차 데이터를 하나도 찾지 못했습니다. 사이트 구조가 바뀌었을 수 있어요.")
-        return 1
+        print("경고: 회차 데이터를 하나도 찾지 못했습니다. "
+              "위 텍스트 미리보기를 보고 사이트 구조/차단 여부를 확인하세요.")
+        return 0
 
     added = []
     for rnd, rec in scraped.items():
